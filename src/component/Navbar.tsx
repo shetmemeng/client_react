@@ -9,24 +9,21 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ScnhsLogo from "../assets/scnhs-logo.jpg";
 
 const Navbar: React.FC = () => {
-  const { session: { user }, logout } = useAuth(); // Access user session and logout functionality
-  const navigate = useNavigate(); // Navigation hook
-  const location = useLocation(); // To check current route
+  const { session: { user }, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Fetch unapproved users count for the admin role
   const { data } = useQuery({
     queryKey: ["pending-users"],
     queryFn: getUnapprovedUsers,
-    enabled: !!user?.id && user?.role === "ADMIN", // Only fetch if the user is an admin
-    refetchInterval: 1000, // Polling every second
+    enabled: !!user?.id && user?.role === "ADMIN",
+    refetchInterval: 1000,
   });
 
   const { Text } = Typography;
 
-  // Helper function to check if a navigation link is active
   const isActive = (path: string) => location.pathname === path;
 
-  // Handles menu actions like navigating to profile or logging out
   const handleMenuClick = (e: { key: string }) => {
     if (e.key === "profile") {
       navigate(user?.role === "ADMIN" ? "/admin/profile" : "/user/profile");
@@ -36,13 +33,11 @@ const Navbar: React.FC = () => {
     }
   };
 
-  // Fetch the profile data of the logged-in user
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: () => getProfile(String(user?.id)),
   });
 
-  // Dropdown menu for user profile actions
   const profileMenu = (
     <Menu onClick={handleMenuClick}>
       <Menu.Item key="profile" icon={<ProfileOutlined />}>
@@ -58,10 +53,7 @@ const Navbar: React.FC = () => {
     <div className="bg-white shadow-md sticky top-0 w-full z-50">
       <div className="container mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo and Title */}
-        <div
-          className="flex items-center space-x-4 cursor-pointer"
-          onClick={() => navigate("/")} // Navigate to home
-        >
+        <div className="hidden md:flex items-center space-x-4 cursor-pointer" onClick={() => navigate("/")}>
           <img src={ScnhsLogo} alt="SCNHS Logo" className="w-12 h-12 rounded-full" />
           <div className="text-blue-500 text-xl font-bold">AlumniSystem</div>
         </div>
@@ -69,21 +61,21 @@ const Navbar: React.FC = () => {
         {/* Navigation Menu */}
         <div className="hidden md:flex items-center space-x-10">
           {[
-            ...(user?.role === "ADMIN" ? [{ label: "Alumni", path: "/admin", hasBadge: true }] : []), // Admin-only link
-            { label: "Events", path: user?.role === "ADMIN" ? "/admin/events" : "/user" }, // General links
-            { label: "Jobs", path: user?.role === "ADMIN" ? "/admin/jobs" : "/user/jobs" },
-            { label: "News & Updates", path: user?.role === "ADMIN" ? "/admin/news" : "/user/news" },
+            ...(user?.role === "ADMIN" ? [{ label: "Alumni", path: "/admin", hasBadge: true }] : []),
+            { label: "Events", path: user?.role === "ADMIN" ? "/admin/events" : "/user" },
+            { label: "Jobs", path: user?.role === "ADMIN" ? "/admin/jobs" :"/user/jobs" },
+            { label: "News & Updates", path: user?.role === "ADMIN" ? "/admin/news": "/user/news" },
           ].map((menuItem) => (
             <Text
               key={menuItem.label}
               className={`cursor-pointer text-sm font-medium ${
                 isActive(menuItem.path)
-                  ? "text-blue-500 border-b-2 border-blue-500" // Highlight active link
-                  : "text-gray-700 hover:text-blue-500" // Hover effect for inactive links
+                  ? "text-blue-500 border-b-2 border-blue-500"
+                  : "text-gray-700 hover:text-blue-500"
               }`}
-              onClick={() => navigate(menuItem.path)} // Navigate to the respective path
+              onClick={() => navigate(menuItem.path)}
             >
-              {menuItem.hasBadge ? ( // Conditionally show a badge for the admin
+              {menuItem.hasBadge ? (
                 <Badge count={data} offset={[10, 8]} color="red">
                   {menuItem.label}
                 </Badge>
@@ -92,6 +84,34 @@ const Navbar: React.FC = () => {
               )}
             </Text>
           ))}
+        </div>
+        {/* Small Screen Menu */}
+        <div className="sm:block md:hidden">
+          <Dropdown
+            overlay={
+              <Menu>
+                {[
+                  ...(user?.role === "ADMIN" ? [{ label: "Alumni", path: "/admin", hasBadge: true }] : []),
+                  { label: "Events", path: user?.role === "ADMIN" ? "/admin/events" : "/user" },
+                  { label: "Jobs", path: user?.role === "ADMIN" ? "/admin/jobs" : "/user/jobs" },
+                  { label: "News & Updates", path: user?.role === "ADMIN" ? "/admin/news" : "/user/news" },
+                ].map((menuItem) => (
+                  <Menu.Item key={menuItem.label} onClick={() => navigate(menuItem.path)}>
+                    {menuItem.hasBadge ? (
+                      <Badge count={data} offset={[10, 8]} color="red">
+                        {menuItem.label}
+                      </Badge>
+                    ) : (
+                      menuItem.label
+                    )}
+                  </Menu.Item>
+                ))}
+              </Menu>
+            }
+            trigger={["click"]}
+          >
+            <Text className="cursor-pointer text-sm font-medium">Menu</Text>
+          </Dropdown>
         </div>
 
         {/* User Profile */}
@@ -102,13 +122,13 @@ const Navbar: React.FC = () => {
               <Avatar
                 className="cursor-pointer"
                 size="large"
-                icon={<UserOutlined />} // Default avatar if profile image is missing
+                icon={<UserOutlined />}
               />
             ) : (
               <Avatar
                 className="cursor-pointer"
                 size="large"
-                src={BASE_URL + "/uploads/" + profile?.image} // Profile picture
+                src={BASE_URL + "/uploads/" + profile?.image}
               />
             )}
           </Dropdown>
